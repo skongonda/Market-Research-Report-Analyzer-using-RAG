@@ -80,18 +80,18 @@ class RAGSystem:
         try:
             # First attempt: Standard text extraction
             with pdfplumber.open(file_path) as pdf:
-                logging.info(f"Processing {file_path} with standard extraction")
+                logging.info(f"Processing {file_path) with standard extraction")
                 
                 for i, page in enumerate(pdf.pages[:max_pages]):
                     page_text = page.extract_text() or ""
                     if page_text:
-                        text += f"\nPAGE {i+1} TEXT:\n{page_text}"
+                        text += f"\nPAGE {i+1) TEXT:\n{page_text}"
                         logging.info(f"Extracted text from page {i+1}")
                         
                     # Table handling
                     tables = page.extract_tables()
                     if tables:
-                        text += f"\nPAGE {i+1} TABLES: {len(tables)} table(s) found"
+                        text += f"\nPAGE {i+1) TABLES: {len(tables)} table(s) found"
                         logging.info(f"Found {len(tables)} tables on page {i+1}")
 
             # If no text found, try OCR
@@ -118,7 +118,7 @@ class RAGSystem:
             return text
 
         except Exception as e:
-            logging.error(f"Failed to process {file_path}: {str(e)}")
+            logging.error(f"Failed to process {file_path): {str(e)}")
             return ""
 
     def get_embedding(self, text):
@@ -181,16 +181,16 @@ class RAGSystem:
                     context.append(f"TEXT CONTENT ({source}):\n{chunk}")
 
             # 5. Generate prompt
-            prompt = f"""Analyze these documents to answer: "{query_text}"
-            
-Document Context:
-{''.join([f'\n\n### Context {i+1}:\n{c}' for i, c in enumerate(context)])}
-
-Instructions:
-1. Pay special attention to leadership sections and tables
-2. If mentioning people, include their titles and roles
-3. Reference specific pages/tables when possible
-4. If unsure, say "The documents state..." instead of assuming."""
+            prompt = (
+                f'Analyze these documents to answer: "{query_text}"\n\n'
+                "Document Context:\n"
+                f"{''.join([f'\n\n### Context {i+1}:\n{c}' for i, c in enumerate(context)])}\n\n"
+                "Instructions:\n"
+                "1. Pay special attention to leadership sections and tables\n"
+                "2. If mentioning people, include their titles and roles\n"
+                "3. Reference specific pages/tables when possible\n"
+                '4. If unsure, say "The documents state..." instead of assuming.'
+            )
 
             # 6. Get LLM response
             response = self.client.chat.completions.create(
