@@ -182,15 +182,15 @@ class RAGSystem:
 
             # 5. Generate prompt
             prompt = f"""Analyze these documents to answer: "{query_text}"
-            
+                        
             Document Context:
             {''.join([f'\n\n### Context {i+1}:\n{c}' for i, c in enumerate(context)])}
-            
+
             Instructions:
             1. Pay special attention to leadership sections and tables
             2. If mentioning people, include their titles and roles
             3. Reference specific pages/tables when possible
-            4. If unsure, say \"The documents state...\" instead of assuming"""
+            4. If unsure, say "The documents state..." instead of assuming"""
 
             # 6. Get LLM response
             response = self.client.chat.completions.create(
