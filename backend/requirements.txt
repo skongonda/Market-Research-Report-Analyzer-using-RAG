@@ -12,5 +12,6 @@ flask
 requests
 python-multipart
 pdf2image
+pytesseract
 
 # -e .
