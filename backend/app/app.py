@@ -4,7 +4,7 @@ from .rag_system import RAGSystem  # Import your RAG system
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://market-research-analyzer-rag.netlify.app"])
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)

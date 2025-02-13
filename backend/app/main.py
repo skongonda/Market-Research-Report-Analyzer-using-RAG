@@ -11,7 +11,7 @@ rag_system = RAGSystem()
 # Enable CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Allow frontend origin
+    allow_origins=["https://market-research-analyzer-rag.netlify.app"],  # Allow frontend origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
