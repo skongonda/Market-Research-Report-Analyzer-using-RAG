@@ -190,7 +190,7 @@ class RAGSystem:
             1. Pay special attention to leadership sections and tables
             2. If mentioning people, include their titles and roles
             3. Reference specific pages/tables when possible
-            4. If unsure, say "The documents state..." instead of assuming"""
+            4. If unsure, say \"The documents state...\" instead of assuming"""
 
             # 6. Get LLM response
             response = self.client.chat.completions.create(
