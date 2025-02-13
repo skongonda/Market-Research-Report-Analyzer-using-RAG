@@ -26,7 +26,7 @@ const FileUpload = ({ onUpload, onFilesChange }) => {
         files.forEach((file) => formData.append('files', file));
 
         try {
-            const response = await axios.post('http://localhost:8000/analyze/', formData, {
+            const response = await axios.post(`${API_BASE_URL}/analyze/`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
 
@@ -37,8 +37,9 @@ const FileUpload = ({ onUpload, onFilesChange }) => {
         } catch (error) {
             console.error('Error uploading files:', error);
             alert(error.response?.data?.detail || "Failed to process files.");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     return (
