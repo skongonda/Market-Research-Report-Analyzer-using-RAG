@@ -1,0 +1,13 @@
+prefix=D:/Lab Setup/market-research-analyzer/market-research-analyzer/Library
+exec_prefix=D:/Lab Setup/market-research-analyzer/market-research-analyzer/Library
+libdir=D:/Lab Setup/market-research-analyzer/market-research-analyzer/Library/lib
+sharedlibdir=D:/Lab Setup/market-research-analyzer/market-research-analyzer/Library/lib
+includedir=D:/Lab Setup/market-research-analyzer/market-research-analyzer/Library/include
+
+Name: zlib
+Description: zlib compression library
+Version: 1.2.13
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz
+Cflags: -I${includedir}

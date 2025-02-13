@@ -1,0 +1,16 @@
+Metadata-Version: 2.2
+Name: Retrieval-Augmented-Generation
+Version: 0.0.1
+Author: skongonda
+Author-email: skongonda@gmail.com
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: openai
+Requires-Dist: pydantic
+Requires-Dist: python-dotenv
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: scipy
+Dynamic: author
+Dynamic: author-email
+Dynamic: requires-dist

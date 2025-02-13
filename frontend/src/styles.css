@@ -1,0 +1,98 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f7fa;
+}
+
+nav {
+    background: #2c3e50;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+nav h1 {
+    color: white;
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+    padding: 2rem;
+    transition: transform 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.upload-section {
+    border: 2px dashed #e0e0e0;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.button-primary {
+    background: #3498db !important;
+    color: white !important;
+    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    text-transform: none !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+}
+
+.button-primary:hover {
+    background: #2980b9 !important;
+    transform: translateY(-1px);
+}
+
+.response-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    border-left: 4px solid #3498db;
+}
+
+.response-text {
+    line-height: 1.6;
+    color: #2c3e50;
+    white-space: pre-wrap;
+}
+
+.file-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.file-list li {
+    padding: 0.5rem 1rem;
+    background: #f0f4f8;
+    margin: 0.5rem 0;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.file-list li::before {
+    content: "📄";
+    margin-right: 0.5rem;
+}

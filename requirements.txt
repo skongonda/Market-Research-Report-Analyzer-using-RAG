@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+openai
+pydantic
+python-dotenv
+numpy
+pandas
+scipy
+PyPDF2
+pdfplumber
+flask
+
+# -e .
