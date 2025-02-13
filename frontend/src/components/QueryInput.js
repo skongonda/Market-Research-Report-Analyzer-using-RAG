@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Button, TextField, Typography, Grid } from '@mui/material';
 import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
+import API_BASE_URL from '../config';
 
 const QueryInput = ({ onQuery, files }) => {
     const [query, setQuery] = useState('');
@@ -23,13 +24,20 @@ const QueryInput = ({ onQuery, files }) => {
         formData.append('query', query);
 
         try {
-            const response = await axios.post('http://localhost:8000/analyze/', formData, {
+            const response = await axios.post(`${API_BASE_URL}/analyze/`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true,
             });
             onQuery(response.data);
         } catch (error) {
             console.error('Error querying:', error);
-            alert(error.response?.data?.detail || "Failed to process query.");
+            if (error.response) {
+                alert(error.response.data?.detail || "Failed to process query.");
+            } else if (error.request) {
+                alert("No response received from the server. Please check your network connection.");
+            } else {
+                alert("An error occurred while setting up the request.");
+            }
         }
     };
 

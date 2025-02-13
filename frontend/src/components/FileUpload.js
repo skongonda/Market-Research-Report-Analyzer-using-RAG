@@ -29,7 +29,7 @@ const FileUpload = ({ onUpload, onFilesChange }) => {
         try {
             const response = await axios.post(`${API_BASE_URL}/analyze/`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                withCredentials: true, // Ensure credentials are sent if needed
+                withCredentials: true,
             });
 
             if (response.data) {
@@ -39,14 +39,10 @@ const FileUpload = ({ onUpload, onFilesChange }) => {
         } catch (error) {
             console.error('Error uploading files:', error);
             if (error.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
                 alert(error.response.data?.detail || "Failed to process files.");
             } else if (error.request) {
-                // The request was made but no response was received
                 alert("No response received from the server. Please check your network connection.");
             } else {
-                // Something happened in setting up the request that triggered an Error
                 alert("An error occurred while setting up the request.");
             }
         } finally {
