@@ -80,18 +80,18 @@ class RAGSystem:
         try:
             # First attempt: Standard text extraction
             with pdfplumber.open(file_path) as pdf:
-                logging.info(f"Processing {file_path) with standard extraction")
+                logging.info(f"Processing {file_path} with standard extraction")
                 
                 for i, page in enumerate(pdf.pages[:max_pages]):
                     page_text = page.extract_text() or ""
                     if page_text:
-                        text += f"\nPAGE {i+1) TEXT:\n{page_text}"
+                        text += f"\nPAGE {i+1} TEXT:\n{page_text}"
                         logging.info(f"Extracted text from page {i+1}")
                         
                     # Table handling
                     tables = page.extract_tables()
                     if tables:
-                        text += f"\nPAGE {i+1) TABLES: {len(tables)} table(s) found"
+                        text += f"\nPAGE {i+1} TABLES: {len(tables)} table(s) found"
                         logging.info(f"Found {len(tables)} tables on page {i+1}")
 
             # If no text found, try OCR
@@ -118,7 +118,7 @@ class RAGSystem:
             return text
 
         except Exception as e:
-            logging.error(f"Failed to process {file_path): {str(e)}")
+            logging.error(f"Failed to process {file_path}: {str(e)}")
             return ""
 
     def get_embedding(self, text):
