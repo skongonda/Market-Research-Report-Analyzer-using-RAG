@@ -181,10 +181,11 @@ class RAGSystem:
                     context.append(f"TEXT CONTENT ({source}):\n{chunk}")
 
             # 5. Generate prompt
+            context_string = "\n\n".join([f"### Context {i+1}:\n{c}" for i, c in enumerate(context)])
             prompt = (
                 f'Analyze these documents to answer: "{query_text}"\n\n'
                 "Document Context:\n"
-                f"{''.join([f'\n\n### Context {i+1}:\n{c}' for i, c in enumerate(context)])}\n\n"
+                f"{context_string}\n\n"
                 "Instructions:\n"
                 "1. Pay special attention to leadership sections and tables\n"
                 "2. If mentioning people, include their titles and roles\n"
