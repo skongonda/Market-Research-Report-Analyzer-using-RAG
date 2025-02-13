@@ -13,22 +13,27 @@ const QueryInput = ({ onQuery, files }) => {
             alert("Please enter a query.");
             return;
         }
-
+    
         if (!files || files.length === 0) {
             alert("Please upload files before asking a question.");
             return;
         }
-
+    
         const formData = new FormData();
         files.forEach((file) => formData.append('files', file));
         formData.append('query', query);
-
+    
         try {
             const response = await axios.post(`${API_BASE_URL}/analyze/`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 withCredentials: true,
             });
-            onQuery(response.data);
+    
+            if (response && response.data) {
+                onQuery(response.data);
+            } else {
+                throw new Error("Invalid response from the server.");
+            }
         } catch (error) {
             console.error('Error querying:', error);
             if (error.response) {

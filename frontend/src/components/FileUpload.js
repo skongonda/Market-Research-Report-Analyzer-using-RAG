@@ -21,19 +21,21 @@ const FileUpload = ({ onUpload, onFilesChange }) => {
             alert("Please upload 1 to 3 PDF files.");
             return;
         }
-
+    
         setLoading(true);
         const formData = new FormData();
         files.forEach((file) => formData.append('files', file));
-
+    
         try {
             const response = await axios.post(`${API_BASE_URL}/analyze/`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 withCredentials: true,
             });
-
-            if (response.data) {
+    
+            if (response && response.data) {
                 onUpload(response.data);
+            } else {
+                throw new Error("Invalid response from the server.");
             }
             setFiles([]);
         } catch (error) {
