@@ -11,5 +11,6 @@ pdfplumber
 flask
 requests
 python-multipart
+pdf2image
 
 # -e .
