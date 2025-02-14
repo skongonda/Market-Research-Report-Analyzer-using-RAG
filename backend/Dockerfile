@@ -4,11 +4,9 @@ FROM python:3.11-slim
 # Install system dependencies including Tesseract and Poppler
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
-    tesseract-ocr-all \ 
-    libtesseract-dev \
-    libleptonica-dev \
-    poppler-utils \
-    pkg-config \
+    tesseract-ocr-eng \  
+    poppler-utils \      
+    libgl1 \            
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
