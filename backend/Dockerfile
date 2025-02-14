@@ -6,12 +6,13 @@ RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     libtesseract-dev \
     libleptonica-dev \
+    poppler-utils \
     pkg-config
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the requirements.txt first (to leverage Docker's cache mechanism)
+# Copy the requirements.txt first
 COPY backend/requirements.txt .
 
 # Install Python dependencies
