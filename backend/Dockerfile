@@ -4,10 +4,16 @@ FROM python:3.11-slim
 # Install system dependencies including Tesseract and Poppler
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
-    tesseract-ocr-eng \  
-    poppler-utils \      
-    libgl1 \            
+    tesseract-ocr-eng \
+    poppler-utils \
+    libgl1 \
+    libjpeg-dev \        
+    zlib1g-dev \         
+    libtiff5-dev \       
     && rm -rf /var/lib/apt/lists/*
+
+# Add Explicit PATH Configuration
+ENV PATH="/usr/bin:${PATH}"
 
 # Set the working directory
 WORKDIR /app
