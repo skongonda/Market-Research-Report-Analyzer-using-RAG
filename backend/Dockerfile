@@ -8,12 +8,13 @@ RUN apt-get update && apt-get install -y \
     ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables for Poppler and Tesseract
-ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
-ENV POPPLER_PATH=/usr/bin
+# Verify Tesseract installation
+RUN tesseract --version
 
-# Set the correct Tesseract path in the Python environment
+# Set environment variables for Tesseract and Poppler
+ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
 ENV TESSERACT_CMD=/usr/bin/tesseract
+ENV POPPLER_PATH=/usr/bin
 
 WORKDIR /app
 
@@ -22,4 +23,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000"]
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "10000"]

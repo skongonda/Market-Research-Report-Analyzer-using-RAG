@@ -32,12 +32,19 @@ class RAGSystem:
     def _configure_tesseract(self):
         """Ensure Tesseract OCR is properly configured"""
         try:
-            pytesseract.pytesseract.tesseract_cmd = os.getenv("TESSERACT_CMD", "/usr/bin/tesseract")
+            # Explicitly set Tesseract path from environment variables
+            tesseract_cmd = os.getenv("TESSERACT_CMD", "/usr/bin/tesseract")
             tessdata_prefix = os.getenv("TESSDATA_PREFIX", "/usr/share/tesseract-ocr/4.00/tessdata")
+
+            pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
             os.environ["TESSDATA_PREFIX"] = tessdata_prefix
 
             logging.info(f"Tesseract Path: {pytesseract.pytesseract.tesseract_cmd}")
             logging.info(f"Tessdata Path: {os.environ['TESSDATA_PREFIX']}")
+
+            # Check if Tesseract is accessible
+            output = os.popen(f"{tesseract_cmd} --version").read()
+            logging.info(f"Tesseract Version: {output}")
 
         except Exception as e:
             logging.error(f"Tesseract configuration failed: {str(e)}")
