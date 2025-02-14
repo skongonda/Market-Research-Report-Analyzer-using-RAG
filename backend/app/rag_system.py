@@ -6,13 +6,20 @@ from scipy.spatial.distance import cosine
 from .utils import load_environment, with_retry
 import os
 import pdfplumber
-import re
-from pdf2image import convert_from_path
+from pdf2image import convert_from_bytes  # Changed from convert_from_path
 import pytesseract
-import pdfplumber
 import logging
+import subprocess  # Added for path verification
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
+# Configure Tesseract with validation
+try:
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    # Verify Tesseract installation
+    subprocess.run([pytesseract.pytesseract.tesseract_cmd, '--version'], 
+                  check=True, capture_output=True)
+except Exception as e:
+    logging.error(f"Tesseract verification failed: {str(e)}")
+    raise RuntimeError("Tesseract OCR not properly installed") from e
 
 # Configure logging
 logging.basicConfig(
@@ -23,9 +30,23 @@ logging.basicConfig(
 class RAGSystem:
     def __init__(self):
         self.api_key = load_environment()
-        self.client = OpenAI(api_key=self.api_key)  # Initialize OpenAI client
+        self.client = OpenAI(api_key=self.api_key)
         self.table_separator = "=== TABLE ==="
         self.poppler_path = self._get_poppler_path()
+        
+        # Validate OCR setup during initialization
+        self._verify_ocr_setup()
+
+    def _verify_ocr_setup(self):
+        """Validate OCR dependencies are properly installed"""
+        try:
+            # Test OCR with a simple image
+            test_image = pytesseract.image_to_string('test.png')
+            if not test_image:
+                raise RuntimeError("OCR returned empty text")
+        except Exception as e:
+            logging.error(f"OCR setup validation failed: {str(e)}")
+            raise
 
     def _get_poppler_path(self):
         """Find Poppler path or return None"""
@@ -73,46 +94,58 @@ class RAGSystem:
 
     def extract_text_from_pdf(self, file_path, max_pages=5):
         """
-        Extract text from PDF with OCR fallback and detailed logging
-        Returns: Extracted text or empty string
+        Enhanced PDF text extraction with better OCR handling
         """
         text = ""
         try:
-            # First attempt: Standard text extraction
+            # First attempt: Improved text extraction with layout preservation
             with pdfplumber.open(file_path) as pdf:
-                logging.info(f"Processing {file_path} with standard extraction")
+                logging.info(f"Processing {file_path} with enhanced extraction")
                 
                 for i, page in enumerate(pdf.pages[:max_pages]):
-                    page_text = page.extract_text() or ""
-                    if page_text:
-                        text += f"\nPAGE {i+1} TEXT:\n{page_text}"
-                        logging.info(f"Extracted text from page {i+1}")
-                        
-                    # Table handling
-                    tables = page.extract_tables()
+                    # Extract text with layout awareness
+                    page_text = page.extract_text(
+                        x_tolerance=1, 
+                        y_tolerance=3,
+                        keep_blank_chars=True,
+                        use_text_flow=True
+                    ) or ""
+                    
+                    # Extract tables with improved detection
+                    tables = page.find_tables()
                     if tables:
-                        text += f"\nPAGE {i+1} TABLES: {len(tables)} table(s) found"
-                        logging.info(f"Found {len(tables)} tables on page {i+1}")
+                        page_text += f"\n{self.table_separator}\n"
+                        page_text += "\n\n".join(
+                            [str(table.extract()) for table in tables]
+                        )
+                    
+                    text += f"\nPAGE {i+1}:\n{page_text}"
 
-            # If no text found, try OCR
+            # Fallback to OCR only if no text detected
             if not text.strip():
                 logging.warning("No text found via standard extraction. Attempting OCR")
                 try:
-                    images = convert_from_path(
-                        file_path,
-                        first_page=1,
-                        last_page=max_pages,
-                        poppler_path=self.poppler_path
-                    )
-                    text = "\n".join([pytesseract.image_to_string(img) for img in images])
-                    logging.info(f"OCR extracted {len(text.split())} words")
+                    with open(file_path, "rb") as f:
+                        images = convert_from_bytes(
+                            f.read(),
+                            first_page=1,
+                            last_page=max_pages,
+                            poppler_path=self.poppler_path
+                        )
+                        text = "\n".join([
+                            pytesseract.image_to_string(
+                                img, 
+                                config='--psm 3 --oem 3'  # Improved OCR settings
+                            ) for img in images
+                        ])
+                        logging.info(f"OCR extracted {len(text.split())} words")
                 except Exception as ocr_error:
                     logging.error(f"OCR failed: {str(ocr_error)}")
                     return ""
 
-            # Final validation
-            if not text.strip():
-                logging.error("No content found in document")
+            # Content validation with improved checks
+            if not self._validate_content(text):
+                logging.error("No valid content found in document")
                 return ""
                 
             return text
@@ -120,6 +153,12 @@ class RAGSystem:
         except Exception as e:
             logging.error(f"Failed to process {file_path}: {str(e)}")
             return ""
+        
+    def _validate_content(self, text):
+        """Enhanced content validation"""
+        # Check for minimum meaningful content
+        words = [w for w in text.split() if len(w) > 3]
+        return len(words) > 50  # Require at least 50 meaningful words
 
     def get_embedding(self, text):
         """Generate embedding for text, ensuring valid input"""
