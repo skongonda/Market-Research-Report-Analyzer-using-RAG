@@ -18,8 +18,8 @@ app.add_middleware(
         "http://localhost:3000",  # Local frontend (optional)
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
 )
 
 # Ensure the upload directory exists
