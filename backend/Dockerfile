@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a test script to confirm Tesseract is installed at runtime
+# Check Tesseract installation and paths
 RUN echo '#!/bin/bash \n which tesseract \n tesseract --version' > /check_tesseract.sh
 RUN chmod +x /check_tesseract.sh
 
@@ -31,5 +31,5 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Run Tesseract check before starting
+# Ensure Tesseract and Poppler are available at runtime
 CMD ["/bin/bash", "-c", "/check_tesseract.sh && uvicorn backend.app.main:app --host 0.0.0.0 --port 10000"]
