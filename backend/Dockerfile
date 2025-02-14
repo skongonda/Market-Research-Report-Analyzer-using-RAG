@@ -1,13 +1,13 @@
-# Use full Debian image instead of slim for better dependency support
+# Use full Debian for better compatibility
 FROM debian:bookworm
 
-# Set environment variables for non-interactive mode
+# Set non-interactive mode to avoid prompts
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
 ENV TESSERACT_CMD=/usr/bin/tesseract
 ENV POPPLER_PATH=/usr/bin
 
-# Install Python and necessary system dependencies
+# Install dependencies (forcing Tesseract installation)
 RUN apt-get update && apt-get install -y \
     python3 python3-pip \
     tesseract-ocr \
@@ -15,19 +15,21 @@ RUN apt-get update && apt-get install -y \
     poppler-utils \
     libtesseract-dev \
     ghostscript \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Verify Tesseract installation
-RUN echo "Checking Tesseract installation..." && which tesseract && tesseract --version
+# Create a test script to confirm Tesseract is installed at runtime
+RUN echo '#!/bin/bash \n which tesseract \n tesseract --version' > /check_tesseract.sh
+RUN chmod +x /check_tesseract.sh
 
-# Install required Python packages
+# Set working directory
 WORKDIR /app
+
+# Copy dependencies and install them
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy project files
+# Copy application code
 COPY . .
 
-# Run the application
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.
+# Run Tesseract check before starting
+CMD ["/bin/bash", "-c", "/check_tesseract.sh && uvicorn backend.app.main:app --host 0.0.0.0 --port 10000"]
