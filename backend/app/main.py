@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.rag_system import RAGSystem
+from app.rag_system import RAGSystem
 import os
 import shutil
 

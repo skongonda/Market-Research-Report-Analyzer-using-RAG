@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import os
-from backend.app.rag_system import RAGSystem  # Import your RAG system
+from app.rag_system import RAGSystem  # Import your RAG system
 from flask_cors import CORS
 
 app = Flask(__name__)

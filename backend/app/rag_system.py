@@ -3,13 +3,16 @@ TABLE_SEPARATOR = "---TABLE_CONTENT---"
 from openai import OpenAI
 import numpy as np
 from scipy.spatial.distance import cosine
-from backend.app.utils import load_environment, with_retry
+from app.utils import load_environment, with_retry
 import os
 import pdfplumber
 from pdf2image import convert_from_bytes
 import pytesseract
 import logging
 import subprocess
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(

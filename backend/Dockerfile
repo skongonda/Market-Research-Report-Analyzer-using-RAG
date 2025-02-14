@@ -9,7 +9,7 @@ ENV POPPLER_PATH=/usr/bin
 
 # Install dependencies (forcing Tesseract installation)
 RUN apt-get update && apt-get install -y \
-    python3 python3-pip \
+    python3 python3-pip python3-venv \
     tesseract-ocr \
     tesseract-ocr-eng \
     poppler-utils \
@@ -17,19 +17,27 @@ RUN apt-get update && apt-get install -y \
     ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
-# Check Tesseract installation and paths
-RUN echo '#!/bin/bash \n which tesseract \n tesseract --version' > /check_tesseract.sh
-RUN chmod +x /check_tesseract.sh
+# Create virtual environment
+RUN python3 -m venv /opt/venv
 
-# Set working directory
+# Activate virtual environment and install dependencies
+ENV PATH="/opt/venv/bin:$PATH"
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Set working directory to /app (since your code is in backend/app)
 WORKDIR /app
 
-# Copy dependencies and install them
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
-
-# Copy application code
+# Copy everything from the backend directory into /app in the container
 COPY . .
 
+COPY .env /app/.env
+
+
+# Set the PYTHONPATH to include /app so Python can find your backend module
+ENV PYTHONPATH="/app"
+
 # Ensure Tesseract and Poppler are available at runtime
-CMD ["/bin/bash", "-c", "/check_tesseract.sh && uvicorn backend.app.main:app --host 0.0.0.0 --port 10000"]
+CMD ["/bin/bash", "-c", "ls /app && which tesseract && tesseract --version && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
+
+
