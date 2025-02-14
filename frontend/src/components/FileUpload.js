@@ -17,21 +17,45 @@ const FileUpload = ({ onUpload, onFilesChange }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (files.length < 1 || files.length > 3) {
+          alert("Please upload 1 to 3 PDF files.");
+          return;
+        }
+      
+        setLoading(true);
+      
+        // Define formData here
+        const formData = new FormData();
+        files.forEach((file) => formData.append("files", file));
+      
         try {
-          // ... existing code ...
           const response = await axios.post(
             `${API_BASE_URL}/analyze/`,
             formData,
-            { headers: { "Content-Type": "multipart/form-data" } }
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+              withCredentials: true,
+            }
           );
-          if (response.data.error) {
-            alert(response.data.error); // Show backend error message
-          } else {
+      
+          if (response && response.data) {
             onUpload(response.data);
+          } else {
+            throw new Error("Invalid response from the server.");
           }
+      
+          setFiles([]);
         } catch (error) {
           console.error("Error uploading files:", error);
-          alert(error.response?.data?.detail || "Failed to process files.");
+          if (error.response) {
+            alert(error.response.data?.detail || "Failed to process files.");
+          } else if (error.request) {
+            alert("No response received from the server. Please check your network connection.");
+          } else {
+            alert("An error occurred while setting up the request.");
+          }
+        } finally {
+          setLoading(false);
         }
       };
 
