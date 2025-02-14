@@ -27,9 +27,9 @@ class RAGSystem:
         self.table_separator = "=== TABLE ==="
 
         # Set paths for Poppler and Tesseract
-        self.poppler_path = os.getenv('POPPLER_PATH', r'C:\Users\skong\AppData\Roaming\Release-24.08.0-0\poppler-24.08.0\Library\bin')
-        self.tesseract_path = os.getenv('TESSERACT_CMD', r'C:\Program Files\Tesseract-OCR\tesseract.exe')
-        self.tessdata_prefix = os.getenv('TESSDATA_PREFIX', r'C:\Program Files\Tesseract-OCR\tessdata')
+        self.poppler_path = os.getenv('POPPLER_PATH', '/usr/bin/pdftoppm')
+        self.tesseract_path = os.getenv('TESSERACT_CMD', '/usr/bin/tesseract')
+        self.tessdata_prefix = os.getenv('TESSDATA_PREFIX', '/usr/share/tesseract-ocr/5/tessdata/')
 
         # Configure Tesseract
         try:
