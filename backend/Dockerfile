@@ -11,11 +11,11 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Verify Tesseract installation and log the correct path
-RUN which tesseract && tesseract --version
-
 # Set the working directory
 WORKDIR /app
+
+# Verify Tesseract installation and log the correct path
+RUN which tesseract && tesseract --version
 
 # Copy the requirements.txt first (to leverage Docker's cache mechanism)
 COPY backend/requirements.txt .

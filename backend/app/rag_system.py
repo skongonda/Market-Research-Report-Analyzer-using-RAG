@@ -45,25 +45,24 @@ class RAGSystem:
             raise e
 
     def extract_text_from_pdf(self, file_path, max_pages=5):
-        """Extract text from PDF with OCR fallback"""
         text = ""
         try:
-            # Standard extraction
+            # First attempt: Standard text extraction
             with pdfplumber.open(file_path) as pdf:
                 for i, page in enumerate(pdf.pages[:max_pages]):
                     page_text = page.extract_text() or ""
                     if page_text:
                         text += f"\nPAGE {i+1} TEXT:\n{page_text}"
 
-            # OCR fallback
+            # OCR fallback (use convert_from_bytes instead of convert_from_path)
             if not text.strip():
                 with open(file_path, "rb") as f:
-                    images = convert_from_bytes(
+                    images = convert_from_bytes(  # Changed from convert_from_path
                         f.read(),
                         first_page=1,
                         last_page=max_pages,
                         poppler_path=self.poppler_path,
-                        dpi=300  # Increase DPI for better OCR
+                        dpi=300
                     )
                     text = "\n".join([
                         pytesseract.image_to_string(
@@ -71,35 +70,29 @@ class RAGSystem:
                             config=f'--tessdata-dir "{self.tessdata_dir}" --psm 3 --oem 3'
                         ) for img in images
                     ])
-                
+                    
             return text
-
         except Exception as e:
             logging.error(f"PDF Processing Error: {str(e)}")
             return ""
         
-    def chunk_text(self, text, max_length=1000):
-        """Split text into chunks of specified max_length."""
+    def chunk_text(self, text, max_tokens=1000):
+        """Split text into chunks of max_tokens"""
+        words = text.split()
         chunks = []
         current_chunk = []
-        current_length = 0
+        current_tokens = 0
 
-        for sentence in text.split(". "):
-            sentence = sentence.strip()
-            if not sentence:
-                continue
-
-            sentence_length = len(sentence)
-            if current_length + sentence_length > max_length and current_chunk:
-                chunks.append(". ".join(current_chunk) + ".")
+        for word in words:
+            current_chunk.append(word)
+            current_tokens += 1
+            if current_tokens >= max_tokens:
+                chunks.append(" ".join(current_chunk))
                 current_chunk = []
-                current_length = 0
-
-            current_chunk.append(sentence)
-            current_length += sentence_length
+                current_tokens = 0
 
         if current_chunk:
-            chunks.append(". ".join(current_chunk) + ".")
+            chunks.append(" ".join(current_chunk))
 
         return chunks
 
