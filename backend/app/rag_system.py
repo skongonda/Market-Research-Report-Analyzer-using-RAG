@@ -6,20 +6,10 @@ from scipy.spatial.distance import cosine
 from .utils import load_environment, with_retry
 import os
 import pdfplumber
-from pdf2image import convert_from_bytes  # Changed from convert_from_path
+from pdf2image import convert_from_bytes
 import pytesseract
 import logging
-import subprocess  # Added for path verification
-
-# Configure Tesseract with validation
-try:
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-    # Verify Tesseract installation
-    subprocess.run([pytesseract.pytesseract.tesseract_cmd, '--version'], 
-                  check=True, capture_output=True)
-except Exception as e:
-    logging.error(f"Tesseract verification failed: {str(e)}")
-    raise RuntimeError("Tesseract OCR not properly installed") from e
+import subprocess
 
 # Configure logging
 logging.basicConfig(
@@ -36,16 +26,32 @@ class RAGSystem:
         self.tessdata_prefix = os.getenv('TESSDATA_PREFIX', r'C:\Program Files\Tesseract-OCR\tessdata')
 
         # Configure Tesseract
-        pytesseract.pytesseract.tesseract_cmd = os.path.join(
-            os.path.dirname(self.tessdata_prefix), 
-            'tesseract.exe'
-        )
-        
+        self._configure_tesseract()
+
         # Validate OCR setup during initialization
         self._verify_ocr_setup()
 
+    def _configure_tesseract(self):
+        """Configure Tesseract based on the environment."""
+        try:
+            if os.name == 'nt':  # Windows
+                pytesseract.pytesseract.tesseract_cmd = os.path.join(
+                    os.path.dirname(self.tessdata_prefix), 
+                    'tesseract.exe'
+                )
+            else:  # Linux (Render)
+                pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+                os.environ['TESSDATA_PREFIX'] = '/usr/share/tesseract-ocr/4.00/tessdata'
+
+            # Verify Tesseract installation
+            subprocess.run([pytesseract.pytesseract.tesseract_cmd, '--version'], 
+                          check=True, capture_output=True)
+        except Exception as e:
+            logging.error(f"Tesseract verification failed: {str(e)}")
+            raise RuntimeError("Tesseract OCR not properly installed") from e
+
     def _verify_ocr_setup(self):
-        """Validate OCR dependencies are properly installed"""
+        """Validate OCR dependencies are properly installed."""
         try:
             # Test OCR with a simple image
             test_image = pytesseract.image_to_string('test.png')
@@ -56,7 +62,7 @@ class RAGSystem:
             raise
 
     def _get_poppler_path(self):
-        """Find Poppler path or return None"""
+        """Find Poppler path or return None."""
         if os.name == 'nt':  # Windows
             paths = [
                 r"C:\poppler\bin",
@@ -80,7 +86,7 @@ class RAGSystem:
         return summary.strip()
     
     def chunk_text(self, text, max_tokens=1000):
-        """Split text into chunks of max_tokens"""
+        """Split text into chunks of max_tokens."""
         words = text.split()
         chunks = []
         current_chunk = []
@@ -101,7 +107,7 @@ class RAGSystem:
 
     def extract_text_from_pdf(self, file_path, max_pages=5):
         """
-        Enhanced PDF text extraction with better OCR handling
+        Enhanced PDF text extraction with better OCR handling.
         """
         text = ""
         try:
@@ -162,13 +168,13 @@ class RAGSystem:
             return ""
         
     def _validate_content(self, text):
-        """Enhanced content validation"""
+        """Enhanced content validation."""
         # Check for minimum meaningful content
         words = [w for w in text.split() if len(w) > 3]
         return len(words) > 50  # Require at least 50 meaningful words
 
     def get_embedding(self, text):
-        """Generate embedding for text, ensuring valid input"""
+        """Generate embedding for text, ensuring valid input."""
         try:
             # Clean and truncate text to fit OpenAI's input limits
             clean_text = text.replace("\n", " ").replace("  ", " ").strip()
@@ -190,7 +196,7 @@ class RAGSystem:
             return np.zeros(1536)  # Fallback to zero vector
 
     def query(self, query_text, file_paths):
-        """Process user query and generate a response"""
+        """Process user query and generate a response."""
         try:
             # 1. Process all documents
             all_chunks = []
