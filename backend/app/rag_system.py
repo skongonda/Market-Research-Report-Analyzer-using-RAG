@@ -25,17 +25,16 @@ class RAGSystem:
         self.api_key = load_environment()
         self.client = OpenAI(api_key=self.api_key)
         self.table_separator = "=== TABLE ==="
-
-        # Set paths for Poppler and Tesseract
-        self.poppler_path = os.getenv('POPPLER_PATH', '/usr/bin/pdftoppm')
-        self.tesseract_path = os.getenv('TESSERACT_CMD', '/usr/bin/tesseract')
-        self.tessdata_prefix = os.getenv('TESSDATA_PREFIX', '/usr/share/tesseract-ocr/5/tessdata/')
-
+        
+        # Use environment variables with Linux defaults
+        self.poppler_path = os.getenv('POPPLER_PATH', '/usr/bin')
+        self.tesseract_cmd = os.getenv('TESSERACT_CMD', '/usr/bin/tesseract')
+        self.tessdata_dir = os.getenv('TESSDATA_PREFIX', '/usr/share/tesseract-ocr/5/tessdata')
+        
         # Configure Tesseract
-        try:
-            self._configure_tesseract()
-        except FileNotFoundError:
-            raise RuntimeError("Tesseract is not installed or could not be found.")
+        pytesseract.pytesseract.tesseract_cmd = self.tesseract_cmd
+        os.environ['TESSDATA_PREFIX'] = self.tessdata_dir
+
 
     def _configure_tesseract(self):
         try:
@@ -46,58 +45,37 @@ class RAGSystem:
             raise e
 
     def extract_text_from_pdf(self, file_path, max_pages=5):
-        """
-        Extract text from PDF with OCR fallback.
-        """
+        """Extract text from PDF with OCR fallback"""
         text = ""
         try:
-            # First attempt: Extract text using pdfplumber
+            # Standard extraction
             with pdfplumber.open(file_path) as pdf:
-                logging.info(f"Processing {file_path} with standard extraction")
-                
                 for i, page in enumerate(pdf.pages[:max_pages]):
                     page_text = page.extract_text() or ""
                     if page_text:
                         text += f"\nPAGE {i+1} TEXT:\n{page_text}"
-                        logging.info(f"Extracted text from page {i+1}")
-                    
-                    # Extract tables
-                    tables = page.extract_tables()
-                    if tables:
-                        text += f"\nPAGE {i+1} TABLES: {len(tables)} table(s) found"
-                        logging.info(f"Found {len(tables)} tables on page {i+1}")
 
-            # Fallback to OCR if no text is found
+            # OCR fallback
             if not text.strip():
-                logging.warning("No text found via standard extraction. Attempting OCR")
-                try:
-                    with open(file_path, "rb") as f:
-                        images = convert_from_bytes(
-                            f.read(),
-                            first_page=1,
-                            last_page=max_pages,
-                            poppler_path=self.poppler_path
-                        )
-                        text = "\n".join([
-                            pytesseract.image_to_string(
-                                img, 
-                                config='--psm 3 --oem 3'  # Improved OCR settings
-                            ) for img in images
-                        ])
-                        logging.info(f"OCR extracted {len(text.split())} words")
-                except Exception as ocr_error:
-                    logging.error(f"OCR failed: {str(ocr_error)}")
-                    return ""
-
-            # Validate content
-            if not self._validate_content(text):
-                logging.error("No valid content found in document")
-                return ""
+                with open(file_path, "rb") as f:
+                    images = convert_from_bytes(
+                        f.read(),
+                        first_page=1,
+                        last_page=max_pages,
+                        poppler_path=self.poppler_path,
+                        dpi=300  # Increase DPI for better OCR
+                    )
+                    text = "\n".join([
+                        pytesseract.image_to_string(
+                            img,
+                            config=f'--tessdata-dir "{self.tessdata_dir}" --psm 3 --oem 3'
+                        ) for img in images
+                    ])
                 
             return text
 
         except Exception as e:
-            logging.error(f"Failed to process {file_path}: {str(e)}")
+            logging.error(f"PDF Processing Error: {str(e)}")
             return ""
         
     def chunk_text(self, text, max_length=1000):

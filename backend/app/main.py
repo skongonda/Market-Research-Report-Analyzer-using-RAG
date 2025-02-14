@@ -14,8 +14,9 @@ rag_system = RAGSystem()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://market-research-analyzer-rag.netlify.app",  # Netlify URL
         "http://localhost:3000",  # Local frontend (optional)
+        "https://market-research-analyzer-rag.netlify.app",  # Netlify URL
+        
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods
