@@ -30,27 +30,28 @@ class RAGSystem:
         self._configure_tesseract()
 
     def _configure_tesseract(self):
-        """Configure Tesseract based on the environment."""
+        """Configure Tesseract with simple if-else"""
         try:
             if os.name == 'nt':  # Windows
-                # Set Tesseract path for Windows
-                pytesseract.pytesseract.tesseract_cmd = os.path.join(
-                    os.path.dirname(self.tessdata_prefix), 
-                    'tesseract.exe'
-                )
+                tesseract_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+                tessdata_path = r'C:\Program Files\Tesseract-OCR\tessdata'
             else:  # Linux (Render)
-                # Set Tesseract path for Linux
-                pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
-                os.environ['TESSDATA_PREFIX'] = '/usr/share/tesseract-ocr/4.00/tessdata'
+                tesseract_path = '/usr/bin/tesseract'
+                tessdata_path = '/usr/share/tesseract-ocr/4.00/tessdata'
 
-            # Verify Tesseract installation
-            if not os.path.exists(pytesseract.pytesseract.tesseract_cmd):
-                raise RuntimeError(f"Tesseract not found at {pytesseract.pytesseract.tesseract_cmd}")
-            
-            logging.info(f"Tesseract configured successfully at {pytesseract.pytesseract.tesseract_cmd}")
+            # Set paths
+            pytesseract.pytesseract.tesseract_cmd = tesseract_path
+            os.environ['TESSDATA_PREFIX'] = tessdata_path
+
+            # Simple file existence check
+            if not os.path.exists(tesseract_path):
+                raise FileNotFoundError(f"Tesseract not found at {tesseract_path}")
+                
+            logging.info(f"Tesseract configured at {tesseract_path}")
+
         except Exception as e:
-            logging.error(f"Tesseract configuration failed: {str(e)}")
-            raise RuntimeError("Tesseract OCR not properly installed") from e
+            logging.error(f"Tesseract setup failed: {str(e)}")
+            raise RuntimeError("OCR system initialization failed") from e
 
     def extract_text_from_pdf(self, file_path, max_pages=5):
         """

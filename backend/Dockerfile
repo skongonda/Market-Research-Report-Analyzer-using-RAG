@@ -1,15 +1,19 @@
 # Use an official Python runtime as a parent image
 FROM python:3.11-slim
 
-# Set the working directory
-WORKDIR /app
-
-# Install system dependencies for Tesseract OCR
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
+    poppler-utils \
     tesseract-ocr \
     libtesseract-dev \
-    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV POPPLER_PATH=/usr/bin
+ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
+
+# Set the working directory
+WORKDIR /app
 
 # Copy the requirements file into the container
 COPY requirements.txt .
