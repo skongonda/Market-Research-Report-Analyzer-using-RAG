@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Check and log the Tesseract installation path and version
+# Log Tesseract installation path and version
 RUN which tesseract && tesseract --version
 
 # Set the working directory
