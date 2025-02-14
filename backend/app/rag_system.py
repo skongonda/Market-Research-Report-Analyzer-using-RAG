@@ -3,7 +3,7 @@ TABLE_SEPARATOR = "---TABLE_CONTENT---"
 from openai import OpenAI
 import numpy as np
 from scipy.spatial.distance import cosine
-from .utils import load_environment, with_retry
+from app.utils import load_environment, with_retry
 import os
 import pdfplumber
 from pdf2image import convert_from_bytes
@@ -30,27 +30,18 @@ class RAGSystem:
         self._configure_tesseract()
 
     def _configure_tesseract(self):
-        """Configure Tesseract with simple if-else"""
+        """Simplified Tesseract setup"""
         try:
             if os.name == 'nt':  # Windows
                 tesseract_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-                tessdata_path = r'C:\Program Files\Tesseract-OCR\tessdata'
             else:  # Linux (Render)
                 tesseract_path = '/usr/bin/tesseract'
-                tessdata_path = '/usr/share/tesseract-ocr/4.00/tessdata'
-
-            # Set paths
+            
             pytesseract.pytesseract.tesseract_cmd = tesseract_path
-            os.environ['TESSDATA_PREFIX'] = tessdata_path
-
-            # Simple file existence check
-            if not os.path.exists(tesseract_path):
-                raise FileNotFoundError(f"Tesseract not found at {tesseract_path}")
-                
-            logging.info(f"Tesseract configured at {tesseract_path}")
+            logging.info(f"Tesseract path set to: {tesseract_path}")
 
         except Exception as e:
-            logging.error(f"Tesseract setup failed: {str(e)}")
+            logging.error(f"Tesseract configuration failed: {str(e)}")
             raise RuntimeError("OCR system initialization failed") from e
 
     def extract_text_from_pdf(self, file_path, max_pages=5):
