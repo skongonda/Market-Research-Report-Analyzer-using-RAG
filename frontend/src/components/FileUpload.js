@@ -27,10 +27,14 @@ const FileUpload = ({ onUpload, onFilesChange }) => {
         files.forEach((file) => formData.append('files', file));
     
         try {
-            const response = await axios.post(`${API_BASE_URL}/analyze/`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-                withCredentials: true,
-            });
+            const response = await axios.post(
+                `${API_BASE_URL}/analyze/`,
+                formData,
+                {
+                  headers: { "Content-Type": "multipart/form-data" },
+                  withCredentials: true,
+                }
+              );
     
             if (response && response.data) {
                 onUpload(response.data);
