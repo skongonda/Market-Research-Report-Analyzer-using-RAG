@@ -39,10 +39,7 @@ class RAGSystem:
                     os.path.dirname(self.tessdata_prefix), 
                     'tesseract.exe'
                 )
-            else:  # Linux (Render)
-                pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
-                os.environ['TESSDATA_PREFIX'] = '/usr/share/tesseract-ocr/4.00/tessdata'
-
+        
             # Verify Tesseract installation
             subprocess.run([pytesseract.pytesseract.tesseract_cmd, '--version'], 
                           check=True, capture_output=True)
