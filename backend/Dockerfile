@@ -4,6 +4,9 @@ FROM python:3.11-slim
 RUN apt-get update && \
     apt-get install -y tesseract-ocr tesseract-ocr-eng libtesseract-dev poppler-utils ghostscript
 
+# Install Tesseract
+RUN apt-get update && apt-get install -y tesseract-ocr
+
 # Set environment variables for Tesseract and Poppler
 ENV TESSDATA_PREFIX="/usr/share/tesseract-ocr/5/tessdata"
 ENV POPPLER_PATH="/usr/bin/pdftoppm"

@@ -31,23 +31,18 @@ class RAGSystem:
         self.tessdata_prefix = os.getenv('TESSDATA_PREFIX', r'C:\Program Files\Tesseract-OCR\tessdata')
 
         # Configure Tesseract
-        self._configure_tesseract()
+        try:
+            self._configure_tesseract()
+        except FileNotFoundError:
+            raise RuntimeError("Tesseract is not installed or could not be found.")
 
     def _configure_tesseract(self):
         try:
-            # Check the Tesseract version to verify if it's installed
             tesseract_version = subprocess.run(['tesseract', '--version'], check=True, capture_output=True)
-            print(f"Tesseract Version: {tesseract_version.stdout.decode()}")  # Add this to log Tesseract details
-
-            # Continue with your existing setup
-            tessdata_prefix = os.environ.get("TESSDATA_PREFIX")
-            tesseract_cmd = os.environ.get("TESSERACT_CMD")
-            if not tessdata_prefix or not tesseract_cmd:
-                raise RuntimeError("Tesseract environment variables are not set correctly.")
-
-        except Exception as e:
-            print(f"Error during Tesseract configuration: {str(e)}")
-            raise RuntimeError("Tesseract is not installed or not found.")
+            print(tesseract_version.stdout.decode('utf-8'))
+        except FileNotFoundError as e:
+            print("Error during Tesseract configuration:", str(e))
+            raise e  # Raise the error or handle it appropriately
 
     def extract_text_from_pdf(self, file_path, max_pages=5):
         """
