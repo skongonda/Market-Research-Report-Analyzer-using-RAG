@@ -30,13 +30,14 @@ class RAGSystem:
         self._configure_tesseract()
 
     def _configure_tesseract(self):
-        """Configure Tesseract with Docker paths"""
+        """Ensure Tesseract OCR is properly configured"""
         try:
-            pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
-            os.environ['TESSDATA_PREFIX'] = '/usr/share/tesseract-ocr/4.00/tessdata'
-            
-            logging.info(f"Tesseract path: {pytesseract.pytesseract.tesseract_cmd}")
-            logging.info(f"Tessdata path: {os.environ['TESSDATA_PREFIX']}")
+            pytesseract.pytesseract.tesseract_cmd = os.getenv("TESSERACT_CMD", "/usr/bin/tesseract")
+            tessdata_prefix = os.getenv("TESSDATA_PREFIX", "/usr/share/tesseract-ocr/4.00/tessdata")
+            os.environ["TESSDATA_PREFIX"] = tessdata_prefix
+
+            logging.info(f"Tesseract Path: {pytesseract.pytesseract.tesseract_cmd}")
+            logging.info(f"Tessdata Path: {os.environ['TESSDATA_PREFIX']}")
 
         except Exception as e:
             logging.error(f"Tesseract configuration failed: {str(e)}")
