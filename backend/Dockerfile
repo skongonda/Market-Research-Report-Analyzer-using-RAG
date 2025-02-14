@@ -1,37 +1,33 @@
-# Use official Python slim image
-FROM python:3.11-slim
+# Use full Debian image instead of slim for better dependency support
+FROM debian:bookworm
 
-# Set environment variables for non-interactive installation
+# Set environment variables for non-interactive mode
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
 ENV TESSERACT_CMD=/usr/bin/tesseract
 ENV POPPLER_PATH=/usr/bin
 
-# Install Tesseract OCR and dependencies
+# Install Python and necessary system dependencies
 RUN apt-get update && apt-get install -y \
+    python3 python3-pip \
     tesseract-ocr \
     tesseract-ocr-eng \
     poppler-utils \
     libtesseract-dev \
     ghostscript \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# DEBUG: Log installed files and confirm Tesseract path
-RUN echo "Checking Tesseract installation..." \
-    && which tesseract \
-    && tesseract --version \
-    && ls -l /usr/bin/tesseract \
-    && ls -l /usr/share/tesseract-ocr/4.00/tessdata
+# Verify Tesseract installation
+RUN echo "Checking Tesseract installation..." && which tesseract && tesseract --version
 
-# Set working directory
+# Install required Python packages
 WORKDIR /app
-
-# Copy Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy application files
+# Copy project files
 COPY . .
 
 # Run the application
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "10000"]
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.
