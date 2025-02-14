@@ -32,7 +32,14 @@ class RAGSystem:
         self.api_key = load_environment()
         self.client = OpenAI(api_key=self.api_key)
         self.table_separator = "=== TABLE ==="
-        self.poppler_path = self._get_poppler_path()
+        self.poppler_path = os.getenv('POPPLER_PATH', r'C:\Users\skong\AppData\Roaming\Release-24.08.0-0\poppler-24.08.0\Library\bin')  # Fallback for local dev
+        self.tessdata_prefix = os.getenv('TESSDATA_PREFIX', r'C:\Program Files\Tesseract-OCR\tessdata')
+
+        # Configure Tesseract
+        pytesseract.pytesseract.tesseract_cmd = os.path.join(
+            os.path.dirname(self.tessdata_prefix), 
+            'tesseract.exe'
+        )
         
         # Validate OCR setup during initialization
         self._verify_ocr_setup()
