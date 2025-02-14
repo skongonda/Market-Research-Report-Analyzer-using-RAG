@@ -1,18 +1,22 @@
 # Use an official Python runtime as a parent image
 FROM python:3.11-slim
 
-# Install system dependencies
+# Install system dependencies including Tesseract and Poppler
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     libtesseract-dev \
     libleptonica-dev \
     poppler-utils \
-    pkg-config
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Check and log the Tesseract installation path and version
+RUN which tesseract && tesseract --version
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the requirements.txt first
+# Copy the requirements.txt first (to leverage Docker's cache mechanism)
 COPY backend/requirements.txt .
 
 # Install Python dependencies
