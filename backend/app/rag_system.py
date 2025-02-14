@@ -9,6 +9,7 @@ import pdfplumber
 from pdf2image import convert_from_bytes
 import pytesseract
 import logging
+import subprocess
 
 # Configure logging
 logging.basicConfig(
@@ -32,18 +33,22 @@ class RAGSystem:
     def _configure_tesseract(self):
         """Ensure Tesseract OCR is properly configured"""
         try:
-            # Explicitly set Tesseract path from environment variables
-            tesseract_cmd = os.getenv("TESSERACT_CMD", "/usr/bin/tesseract")
-            tessdata_prefix = os.getenv("TESSDATA_PREFIX", "/usr/share/tesseract-ocr/4.00/tessdata")
+            # Automatically detect Tesseract path
+            tesseract_cmd = os.getenv("TESSERACT_CMD", None)
+            if not tesseract_cmd:
+                tesseract_cmd = subprocess.getoutput("which tesseract").strip()
+
+            if not tesseract_cmd:
+                raise RuntimeError("Tesseract is not installed or not found.")
 
             pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
-            os.environ["TESSDATA_PREFIX"] = tessdata_prefix
+            os.environ["TESSDATA_PREFIX"] = os.getenv("TESSDATA_PREFIX", "/usr/share/tesseract-ocr/4.00/tessdata")
 
             logging.info(f"Tesseract Path: {pytesseract.pytesseract.tesseract_cmd}")
             logging.info(f"Tessdata Path: {os.environ['TESSDATA_PREFIX']}")
 
-            # Check if Tesseract is accessible
-            output = os.popen(f"{tesseract_cmd} --version").read()
+            # Verify Tesseract installation
+            output = subprocess.getoutput(f"{tesseract_cmd} --version")
             logging.info(f"Tesseract Version: {output}")
 
         except Exception as e:

@@ -5,15 +5,16 @@ RUN apt-get update && apt-get install -y \
     poppler-utils \
     tesseract-ocr \
     libtesseract-dev \
-    ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
-# Verify Tesseract installation
-RUN tesseract --version
+# Ensure Tesseract is correctly installed
+RUN echo "Checking Tesseract installation..." \
+    && which tesseract \
+    && tesseract --version
 
-# Set environment variables for Tesseract and Poppler
-ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
+# Set environment variables
 ENV TESSERACT_CMD=/usr/bin/tesseract
+ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
 ENV POPPLER_PATH=/usr/bin
 
 WORKDIR /app
