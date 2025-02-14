@@ -33,7 +33,7 @@ class RAGSystem:
         # Configure Tesseract
         self._configure_tesseract()
 
-    def _configure_tesseract():
+    def _configure_tesseract(self):
         try:
             # Check the Tesseract version to verify if it's installed
             tesseract_version = subprocess.run(['tesseract', '--version'], check=True, capture_output=True)

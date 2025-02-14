@@ -7,18 +7,7 @@ import uvicorn
 
 app = FastAPI()
 
-# Defining routes and logic here
-@app.get("/")
-def read_root():
-    return {"message": "Hello World"}
-
-if __name__ == "__main__":
-    # Use the $PORT environment variable provided by Render, or default to 10000
-    port = int(os.environ.get("PORT", 10000))
-    
-    # Start the app with Uvicorn and bind it to 0.0.0.0 and the selected port
-    uvicorn.run(app, host="0.0.0.0", port=port)
-
+# Initialize RAGSystem at the start
 rag_system = RAGSystem()
 
 # Enable CORS for frontend communication
@@ -30,8 +19,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Ensure the upload directory exists
 UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)  # Ensure upload directory exists
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello World"}
 
 @app.post("/analyze/")
 async def analyze_files_and_query(
@@ -52,7 +46,7 @@ async def analyze_files_and_query(
         if not file_paths and not query:
             raise HTTPException(status_code=400, detail="No valid PDF files or query provided.")
 
-        # Process the query
+        # Process the query if provided
         if query:
             if not file_paths:
                 raise HTTPException(status_code=400, detail="No PDF files provided for query.")
@@ -69,3 +63,10 @@ async def analyze_files_and_query(
         for file_path in file_paths:
             if os.path.exists(file_path) and file_path.startswith(UPLOAD_DIR):
                 os.remove(file_path)
+
+if __name__ == "__main__":
+    # Use the $PORT environment variable provided by Render, or default to 10000
+    port = int(os.environ.get("PORT", 10000))
+    
+    # Start the app with Uvicorn and bind it to 0.0.0.0 and the selected port
+    uvicorn.run(app, host="0.0.0.0", port=port)
