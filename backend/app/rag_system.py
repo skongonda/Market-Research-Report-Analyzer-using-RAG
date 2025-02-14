@@ -38,11 +38,11 @@ class RAGSystem:
 
     def _configure_tesseract(self):
         try:
-            tesseract_version = subprocess.run(['tesseract', '--version'], check=True, capture_output=True)
-            print(tesseract_version.stdout.decode('utf-8'))
-        except FileNotFoundError as e:
-            print("Error during Tesseract configuration:", str(e))
-            raise e  # Raise the error or handle it appropriately
+            tesseract_version = subprocess.run([self.tesseract_path, '--version'], check=True, capture_output=True)
+            print("Tesseract version:", tesseract_version.stdout.decode())
+        except Exception as e:
+            print("Error during Tesseract configuration:", e)
+            raise e
 
     def extract_text_from_pdf(self, file_path, max_pages=5):
         """

@@ -1,29 +1,28 @@
+# Use an official Python runtime as a parent image
 FROM python:3.11-slim
 
-# Install necessary system dependencies
-RUN apt-get update && \
-    apt-get install -y tesseract-ocr tesseract-ocr-eng libtesseract-dev poppler-utils ghostscript
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    tesseract-ocr \
+    libtesseract-dev \
+    libleptonica-dev \
+    pkg-config
 
-# Install Tesseract
-RUN apt-get update && apt-get install -y tesseract-ocr
-
-# Set environment variables for Tesseract and Poppler
-ENV TESSDATA_PREFIX="/usr/share/tesseract-ocr/5/tessdata"
-ENV POPPLER_PATH="/usr/bin/pdftoppm"
-ENV TESSERACT_CMD="/usr/bin/tesseract"
-
-# Copy the requirements file to install Python dependencies
-COPY backend/requirements.txt /app/requirements.txt
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -r /app/requirements.txt
-
-# Copy the application files into the container
-COPY backend /app
+# Set the working directory
 WORKDIR /app
 
-# Expose the port (this is required for Render)
+# Copy the requirements.txt first (to leverage Docker's cache mechanism)
+COPY backend/requirements.txt .
+
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code to the container
+COPY backend/ /app
+
+# Expose the port for the application
 EXPOSE 10000
 
-# Command to run the app
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
+# Start the FastAPI application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000"]
