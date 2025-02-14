@@ -10,6 +10,7 @@ from pdf2image import convert_from_bytes
 import pytesseract
 import logging
 import subprocess
+import traceback
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -47,33 +48,43 @@ class RAGSystem:
     def extract_text_from_pdf(self, file_path, max_pages=5):
         text = ""
         try:
+            logging.info(f"Processing {file_path} with standard extraction")
             # First attempt: Standard text extraction
             with pdfplumber.open(file_path) as pdf:
                 for i, page in enumerate(pdf.pages[:max_pages]):
                     page_text = page.extract_text() or ""
                     if page_text:
                         text += f"\nPAGE {i+1} TEXT:\n{page_text}"
+                        logging.info(f"Extracted text from page {i+1}")
 
-            # OCR fallback (use convert_from_bytes instead of convert_from_path)
+            # OCR fallback with improved error handling
             if not text.strip():
+                logging.warning("No text found via standard extraction. Attempting OCR")
                 with open(file_path, "rb") as f:
-                    images = convert_from_bytes(  # Changed from convert_from_path
-                        f.read(),
-                        first_page=1,
-                        last_page=max_pages,
-                        poppler_path=self.poppler_path,
-                        dpi=300
-                    )
-                    text = "\n".join([
-                        pytesseract.image_to_string(
-                            img,
-                            config=f'--tessdata-dir "{self.tessdata_dir}" --psm 3 --oem 3'
-                        ) for img in images
-                    ])
-                    
+                    try:
+                        images = convert_from_bytes(
+                            f.read(),
+                            first_page=1,
+                            last_page=max_pages,
+                            poppler_path=self.poppler_path,
+                            dpi=300
+                        )
+                        logging.info(f"Converted {len(images)} pages to images")
+                        text = "\n".join([
+                            pytesseract.image_to_string(
+                                img,
+                                config=f'--tessdata-dir "{self.tessdata_dir}" --psm 3 --oem 3'
+                            ) for img in images
+                        ])
+                        if text.strip():
+                            logging.info("OCR extraction successful")
+                    except Exception as ocr_error:
+                        logging.error(f"OCR failed: {traceback.format_exc()}")
+                        return ""
+
             return text
         except Exception as e:
-            logging.error(f"PDF Processing Error: {str(e)}")
+            logging.error(f"PDF Processing Error: {traceback.format_exc()}")
             return ""
         
     def chunk_text(self, text, max_tokens=1000):
@@ -123,18 +134,35 @@ class RAGSystem:
     def query(self, query_text, file_paths):
         """Process user query and generate a response."""
         try:
+            if not file_paths:
+                logging.error("No files provided for query")
+                return "Error: No documents provided"
+
             all_chunks = []
             for file_path in file_paths:
+                if not os.path.exists(file_path):
+                    logging.error(f"File not found: {file_path}")
+                    continue
+                
                 text = self.extract_text_from_pdf(file_path)
                 if not text:
+                    logging.warning(f"No text extracted from {file_path}")
                     continue
+                
+                # Validate minimum content
+                if not self._validate_content(text):
+                    logging.warning(f"Insignificant content in {file_path}")
+                    continue
+                
                 chunks = self.chunk_text(text)
+                logging.info(f"Created {len(chunks)} chunks from {file_path}")
+                
                 for chunk in chunks:
                     embedding = self.get_embedding(chunk)
                     all_chunks.append((chunk, embedding, file_path))
 
             if not all_chunks:
-                return "Error: No valid content found in documents"
+                return "Error: No analyzable content found in documents"
 
             query_embedding = self.get_embedding(query_text)
             results = []

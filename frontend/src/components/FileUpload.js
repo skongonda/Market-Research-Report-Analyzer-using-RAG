@@ -11,15 +11,22 @@ const FileUpload = ({ onUpload, onFilesChange }) => {
 
     const handleFileChange = (e) => {
         const selectedFiles = [...e.target.files];
-        setFiles(selectedFiles);
-        onFilesChange(selectedFiles);
+        // Validate file types
+        const validFiles = selectedFiles.filter(file => 
+            file.type === 'application/pdf'
+        );
+        if (validFiles.length !== selectedFiles.length) {
+            alert("Only PDF files are allowed");
+        }
+        setFiles(validFiles);
+        onFilesChange(validFiles);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (files.length < 1 || files.length > 3) {
-          alert("Please upload 1 to 3 PDF files.");
-          return;
+            alert("Please upload 1 to 3 PDF files.");
+            return;
         }
       
         setLoading(true);
@@ -27,37 +34,51 @@ const FileUpload = ({ onUpload, onFilesChange }) => {
         // Define formData here
         const formData = new FormData();
         files.forEach((file) => formData.append("files", file));
+        formData.append("query", "Initial analysis");  // Default query
       
         try {
-          const response = await axios.post(
-            `${API_BASE_URL}/analyze/`,
-            formData,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-              withCredentials: true,
+            const response = await axios.post(
+                `${API_BASE_URL}/analyze/`,
+                formData,
+                {
+                    headers: { 
+                        "Content-Type": "multipart/form-data",
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    timeout: 30000,  // 30 seconds timeout
+                    withCredentials: true,
+                }
+            );
+      
+            if (response?.data?.response) {
+                onUpload(response.data);
+            } else {
+                throw new Error(response?.data?.error || "Invalid server response");
             }
-          );
       
-          if (response && response.data) {
-            onUpload(response.data);
-          } else {
-            throw new Error("Invalid response from the server.");
-          }
-      
-          setFiles([]);
+            setFiles([]);
         } catch (error) {
-          console.error("Error uploading files:", error);
-          if (error.response) {
-            alert(error.response.data?.detail || "Failed to process files.");
-          } else if (error.request) {
-            alert("No response received from the server. Please check your network connection.");
-          } else {
-            alert("An error occurred while setting up the request.");
-          }
+            console.error("Full error:", error);
+            let errorMessage = "An error occurred";
+            
+            if (error.response) {
+                // Backend returned error
+                errorMessage = error.response.data?.detail || 
+                             error.response.data?.error || 
+                             `Server error: ${error.response.status}`;
+            } else if (error.request) {
+                // No response received
+                errorMessage = "Server is not responding. Check:\n1. Backend status\n2. Network connection\n3. CORS configuration";
+            } else {
+                // Setup error
+                errorMessage = error.message || "Request setup failed";
+            }
+            
+            alert(`Error: ${errorMessage}`);
         } finally {
-          setLoading(false);
+            setLoading(false);
         }
-      };
+    };
 
     return (
         <div className="card">
