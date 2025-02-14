@@ -99,6 +99,31 @@ class RAGSystem:
         except Exception as e:
             logging.error(f"Failed to process {file_path}: {str(e)}")
             return ""
+        
+    def chunk_text(self, text, max_length=1000):
+        """Split text into chunks of specified max_length."""
+        chunks = []
+        current_chunk = []
+        current_length = 0
+
+        for sentence in text.split(". "):
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+
+            sentence_length = len(sentence)
+            if current_length + sentence_length > max_length and current_chunk:
+                chunks.append(". ".join(current_chunk) + ".")
+                current_chunk = []
+                current_length = 0
+
+            current_chunk.append(sentence)
+            current_length += sentence_length
+
+        if current_chunk:
+            chunks.append(". ".join(current_chunk) + ".")
+
+        return chunks
 
     def _validate_content(self, text):
         """Check if the extracted text is meaningful."""
