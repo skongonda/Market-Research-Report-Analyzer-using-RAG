@@ -3,8 +3,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.rag_system import RAGSystem
 import os
 import shutil
+import uvicorn
 
 app = FastAPI()
+
+# Defining routes and logic here
+@app.get("/")
+def read_root():
+    return {"message": "Hello World"}
+
+if __name__ == "__main__":
+    # Use the $PORT environment variable provided by Render, or default to 10000
+    port = int(os.environ.get("PORT", 10000))
+    
+    # Start the app with Uvicorn and bind it to 0.0.0.0 and the selected port
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 rag_system = RAGSystem()
 

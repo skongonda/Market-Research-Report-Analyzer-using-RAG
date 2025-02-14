@@ -33,28 +33,21 @@ class RAGSystem:
         # Configure Tesseract
         self._configure_tesseract()
 
-    def _configure_tesseract(self):
-        """Ensure Tesseract OCR is properly configured"""
+    def _configure_tesseract():
         try:
-            # Locate Tesseract dynamically
-            tesseract_cmd = os.getenv("TESSERACT_CMD") or subprocess.getoutput("which tesseract").strip()
+            # Check the Tesseract version to verify if it's installed
+            tesseract_version = subprocess.run(['tesseract', '--version'], check=True, capture_output=True)
+            print(f"Tesseract Version: {tesseract_version.stdout.decode()}")  # Add this to log Tesseract details
 
-            if not tesseract_cmd or not os.path.exists(tesseract_cmd):
-                raise RuntimeError("Tesseract is not installed or not found.")
-
-            # Set Tesseract environment variables
-            pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
-            os.environ["TESSDATA_PREFIX"] = os.getenv("TESSDATA_PREFIX", "/usr/share/tesseract-ocr/4.00/tessdata")
-
-            # Log Tesseract version
-            tesseract_version = subprocess.getoutput(f"{tesseract_cmd} --version")
-            logging.info(f"Tesseract Path: {pytesseract.pytesseract.tesseract_cmd}")
-            logging.info(f"Tessdata Path: {os.environ['TESSDATA_PREFIX']}")
-            logging.info(f"Tesseract Version: {tesseract_version}")
+            # Continue with your existing setup
+            tessdata_prefix = os.environ.get("TESSDATA_PREFIX")
+            tesseract_cmd = os.environ.get("TESSERACT_CMD")
+            if not tessdata_prefix or not tesseract_cmd:
+                raise RuntimeError("Tesseract environment variables are not set correctly.")
 
         except Exception as e:
-            logging.error(f"Tesseract configuration failed: {str(e)}")
-            raise RuntimeError("OCR system initialization failed") from e
+            print(f"Error during Tesseract configuration: {str(e)}")
+            raise RuntimeError("Tesseract is not installed or not found.")
 
     def extract_text_from_pdf(self, file_path, max_pages=5):
         """
