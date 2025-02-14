@@ -2,12 +2,15 @@ FROM python:3.11-slim
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    poppler-utils \
+    software-properties-common \
     tesseract-ocr \
+    tesseract-ocr-eng \
     libtesseract-dev \
+    poppler-utils \
+    ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
-# Ensure Tesseract is correctly installed
+# Verify Tesseract installation
 RUN echo "Checking Tesseract installation..." \
     && which tesseract \
     && tesseract --version

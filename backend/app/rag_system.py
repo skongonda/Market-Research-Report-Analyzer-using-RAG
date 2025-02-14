@@ -33,23 +33,20 @@ class RAGSystem:
     def _configure_tesseract(self):
         """Ensure Tesseract OCR is properly configured"""
         try:
-            # Automatically detect Tesseract path
-            tesseract_cmd = os.getenv("TESSERACT_CMD", None)
-            if not tesseract_cmd:
-                tesseract_cmd = subprocess.getoutput("which tesseract").strip()
+            # Detect Tesseract path dynamically
+            tesseract_cmd = subprocess.getoutput("which tesseract").strip()
 
             if not tesseract_cmd:
                 raise RuntimeError("Tesseract is not installed or not found.")
 
+            # Set Tesseract command
             pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
             os.environ["TESSDATA_PREFIX"] = os.getenv("TESSDATA_PREFIX", "/usr/share/tesseract-ocr/4.00/tessdata")
 
+            # Log installation details
             logging.info(f"Tesseract Path: {pytesseract.pytesseract.tesseract_cmd}")
-            logging.info(f"Tessdata Path: {os.environ['TESSDATA_PREFIX']}")
-
-            # Verify Tesseract installation
-            output = subprocess.getoutput(f"{tesseract_cmd} --version")
-            logging.info(f"Tesseract Version: {output}")
+            tesseract_version = subprocess.getoutput(f"{tesseract_cmd} --version")
+            logging.info(f"Tesseract Version: {tesseract_version}")
 
         except Exception as e:
             logging.error(f"Tesseract configuration failed: {str(e)}")
