@@ -12,13 +12,9 @@ const FileUpload = ({ onUpload, onFilesChange }) => {
     const handleFileChange = (e) => {
         const selectedFiles = [...e.target.files];
         
-        // Validate PDF files
         const validFiles = selectedFiles.filter(file => {
-            if (file.type !== 'application/pdf') {
-                alert(`Skipped non-PDF file: ${file.name}`);
-                return false;
-            }
-            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            // Increase limit to 100MB (100 * 1024 * 1024)
+            if (file.size > 100 * 1024 * 1024) { 
                 alert(`File too large: ${file.name} (${Math.round(file.size/1024/1024)}MB)`);
                 return false;
             }

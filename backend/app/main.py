@@ -1,11 +1,23 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
+from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 from app.rag_system import RAGSystem
 import os
 import shutil
 import uvicorn
 
-app = FastAPI()
+# Initialize the FastAPI app
+# Add custom middleware for large files
+middleware = [
+    Middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"]
+    )
+]
+
+app = FastAPI(middleware=middleware)
 
 # Initialize RAGSystem at the start
 rag_system = RAGSystem()
@@ -31,9 +43,10 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 def read_root():
     return {"message": "Hello World"}
 
+# endpoint
 @app.post("/analyze/")
 async def analyze_files_and_query(
-    files: list[UploadFile] = File(None),
+    files: list[UploadFile] = File(..., max_size=100_000_000),  # 100MB limit
     query: str = Form(None)
 ):
     try:
