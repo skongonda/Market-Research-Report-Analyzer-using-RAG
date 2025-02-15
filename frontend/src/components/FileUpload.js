@@ -11,13 +11,20 @@ const FileUpload = ({ onUpload, onFilesChange }) => {
 
     const handleFileChange = (e) => {
         const selectedFiles = [...e.target.files];
-        // Validate file types
-        const validFiles = selectedFiles.filter(file => 
-            file.type === 'application/pdf'
-        );
-        if (validFiles.length !== selectedFiles.length) {
-            alert("Only PDF files are allowed");
-        }
+        
+        // Validate PDF files
+        const validFiles = selectedFiles.filter(file => {
+            if (file.type !== 'application/pdf') {
+                alert(`Skipped non-PDF file: ${file.name}`);
+                return false;
+            }
+            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                alert(`File too large: ${file.name} (${Math.round(file.size/1024/1024)}MB)`);
+                return false;
+            }
+            return true;
+        });
+        
         setFiles(validFiles);
         onFilesChange(validFiles);
     };

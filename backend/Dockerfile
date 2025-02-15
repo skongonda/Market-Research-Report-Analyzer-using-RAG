@@ -3,32 +3,38 @@ FROM python:3.11-slim
 
 # Install system dependencies including Tesseract and Poppler
 RUN apt-get update && apt-get install -y \
+    poppler-utils \
     tesseract-ocr \
     tesseract-ocr-eng \
-    poppler-utils \
     libgl1 \
-    libjpeg-dev \        
-    zlib1g-dev \         
-    libtiff5-dev \       
+    libsm6 \
+    libxext6 \
+    libjpeg-dev \
+    zlib1g-dev \
+    libtiff5-dev \
     && rm -rf /var/lib/apt/lists/*
-
-# Add Explicit PATH Configuration
-ENV PATH="/usr/bin:${PATH}"
-
-# Set the working directory
-WORKDIR /app
 
 # Verify Tesseract installation and log the correct path
 RUN which tesseract && tesseract --version
+
+# Add Explicit PATH Configuration
+ENV POPPLER_PATH=/usr/bin
+ENV TESSERACT_CMD=/usr/bin/tesseract
+ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
+# ENV PATH="/usr/bin:${PATH}"
+
+# Set the working directory
+WORKDIR /app
 
 # Copy the requirements.txt first (to leverage Docker's cache mechanism)
 COPY backend/requirements.txt .
 
 # Install Python dependencies
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# RUN pip install --upgrade pip && \
+#     pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY backend/ /app
+# COPY backend/ /app
 
 # Copy the rest of the application code to the container
 COPY backend/ .

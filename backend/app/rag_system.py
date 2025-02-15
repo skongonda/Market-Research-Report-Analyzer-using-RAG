@@ -12,6 +12,7 @@ import logging
 import subprocess
 import traceback
 from dotenv import load_dotenv
+import tempfile
 
 load_dotenv()
 
@@ -48,43 +49,56 @@ class RAGSystem:
     def extract_text_from_pdf(self, file_path, max_pages=5):
         text = ""
         try:
-            logging.info(f"Processing {file_path} with standard extraction")
-            # First attempt: Standard text extraction
-            with pdfplumber.open(file_path) as pdf:
-                for i, page in enumerate(pdf.pages[:max_pages]):
-                    page_text = page.extract_text() or ""
-                    if page_text:
-                        text += f"\nPAGE {i+1} TEXT:\n{page_text}"
-                        logging.info(f"Extracted text from page {i+1}")
-
-            # OCR fallback with improved error handling
-            if not text.strip():
-                logging.warning("No text found via standard extraction. Attempting OCR")
-                with open(file_path, "rb") as f:
-                    try:
-                        images = convert_from_bytes(
-                            f.read(),
-                            first_page=1,
-                            last_page=max_pages,
-                            poppler_path=self.poppler_path,
-                            dpi=300
-                        )
-                        logging.info(f"Converted {len(images)} pages to images")
-                        text = "\n".join([
-                            pytesseract.image_to_string(
-                                img,
-                                config=f'--tessdata-dir "{self.tessdata_dir}" --psm 3 --oem 3'
-                            ) for img in images
-                        ])
-                        if text.strip():
-                            logging.info("OCR extraction successful")
-                    except Exception as ocr_error:
-                        logging.error(f"OCR failed: {traceback.format_exc()}")
-                        return ""
-
+            # First try pdftotext for text-based PDFs
+            logging.info("Attempting pdftotext extraction")
+            result = subprocess.run(
+                ["pdftotext", "-l", str(max_pages), file_path, "-"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            text = result.stdout.strip()
+            
+            # If empty, try OCR fallback
+            if not text:
+                logging.warning("pdftotext failed, attempting OCR")
+                text = self._ocr_fallback(file_path, max_pages)
+                
             return text
+            
+        except subprocess.CalledProcessError as e:
+            logging.warning(f"pdftotext failed: {e.stderr}")
+            return self._ocr_fallback(file_path, max_pages)
         except Exception as e:
-            logging.error(f"PDF Processing Error: {traceback.format_exc()}")
+            logging.error(f"Extraction failed: {traceback.format_exc()}")
+            return ""
+        
+    def _ocr_fallback(self, file_path, max_pages):
+        """Handle scanned PDFs with OCR"""
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Convert PDF to images
+                images = convert_from_bytes(
+                    open(file_path, "rb").read(),
+                    first_page=1,
+                    last_page=max_pages,
+                    output_folder=temp_dir,
+                    fmt="png",
+                    poppler_path=self.poppler_path
+                )
+                
+                # OCR each image
+                text = "\n".join([
+                    pytesseract.image_to_string(
+                        img,
+                        config=f'--tessdata-dir "{self.tessdata_dir}" --psm 3 --oem 3'
+                    ) for img in images
+                ])
+                
+                return text
+        except Exception as e:
+            logging.error(f"OCR fallback failed: {traceback.format_exc()}")
             return ""
         
     def chunk_text(self, text, max_tokens=1000):
