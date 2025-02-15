@@ -4,7 +4,7 @@ FROM python:3.11-slim
 # Install system dependencies including Tesseract and Poppler
 RUN apt-get update && apt-get install -y \
     poppler-utils \
-    tesseract-ocr \
+    tesseract-ocr \  
     tesseract-ocr-eng \
     libgl1 \
     libsm6 \
@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     zlib1g-dev \
     libtiff5-dev \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Verify Tesseract installation and log the correct path

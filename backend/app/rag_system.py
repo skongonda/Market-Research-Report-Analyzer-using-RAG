@@ -49,29 +49,54 @@ class RAGSystem:
     def extract_text_from_pdf(self, file_path, max_pages=5):
         text = ""
         try:
-            # First try pdftotext for text-based PDFs
-            logging.info("Attempting pdftotext extraction")
-            result = subprocess.run(
-                ["pdftotext", "-l", str(max_pages), file_path, "-"],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-            text = result.stdout.strip()
-            
-            # If empty, try OCR fallback
-            if not text:
-                logging.warning("pdftotext failed, attempting OCR")
-                text = self._ocr_fallback(file_path, max_pages)
+            # Verify PDF validity first
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"PDF file not found: {file_path}")
                 
-            return text
-            
-        except subprocess.CalledProcessError as e:
-            logging.warning(f"pdftotext failed: {e.stderr}")
-            return self._ocr_fallback(file_path, max_pages)
+            # 1. Attempt pdftotext extraction
+            try:
+                result = subprocess.run(
+                    ["pdftotext", "-l", str(max_pages), file_path, "-"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    timeout=30  # 30-second timeout
+                )
+                if result.returncode == 0:
+                    text = result.stdout.strip()
+                    if text:
+                        logging.info("pdftotext extraction successful")
+                        return text
+            except Exception as e:
+                logging.warning(f"pdftotext failed: {str(e)}")
+
+            # 2. Fallback to OCR with improved error handling
+            logging.warning("Starting OCR fallback")
+            with tempfile.TemporaryDirectory() as temp_dir:
+                images = convert_from_bytes(
+                    open(file_path, "rb").read(),
+                    first_page=1,
+                    last_page=max_pages,
+                    output_folder=temp_dir,
+                    fmt="jpeg",
+                    poppler_path=self.poppler_path,
+                    timeout=60
+                )
+                
+                if not images:
+                    raise ValueError("PDF to image conversion failed")
+                    
+                text = "\n".join([
+                    pytesseract.image_to_string(
+                        img,
+                        config=f'--tessdata-dir "{self.tessdata_dir}" --psm 3 --oem 3'
+                    ) for img in images
+                ])
+                
+                return text
+
         except Exception as e:
-            logging.error(f"Extraction failed: {traceback.format_exc()}")
+            logging.error(f"PDF processing failed: {traceback.format_exc()}")
             return ""
         
     def _ocr_fallback(self, file_path, max_pages):
